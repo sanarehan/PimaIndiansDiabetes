@@ -19,10 +19,14 @@ X_train, X_test, y_train, y_test = train_test_split(
 input_shape = X_train.shape[1]
 
 model = keras.Sequential([
-    keras.layers.Dense(units=64, activation="relu", input_shape=(input_shape,)),
-    keras.layers.Dense(units=32, activation="relu"),
-    keras.layers.Dense(units=20, activation="relu"),
-    keras.layers.Dense(units=1, activation="tanh")
+    keras.layers.Dense(units=500, activation="relu", input_shape=(input_shape,)),
+    keras.layers.BatchNormalization(),
+    keras.layers.Dropout(0.3),
+    keras.layers.Dense(units=500, activation='relu'),
+    keras.layers.BatchNormalization(),
+    keras.layers.Dropout(0.2),
+    keras.layers.Dense(units=100),
+    keras.layers.Dense(units=1, activation="sigmoid")
 ])
 
 model.compile(
@@ -31,7 +35,19 @@ model.compile(
     metrics=['accuracy']
 )
 
-history = model.fit(X_train, y_train, epochs=50, batch_size=32, validation_split=0.2, verbose=1)
+early_stopping = keras.callbacks.EarlyStopping(
+    patience=5,
+    min_delta=0.001,
+    restore_best_weights=True,
+)
+history = model.fit(
+    X_train, y_train,
+    validation_data=(X_test, y_test),
+    batch_size=128,
+    epochs=200,
+    callbacks=[early_stopping],
+)
 
 test_loss, test_acc = model.evaluate(X_test, y_test, verbose=0)
 print('Test accuracy:', test_acc)
+
